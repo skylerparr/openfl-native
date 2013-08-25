@@ -19,6 +19,7 @@ import sys.net.Host;
 import flash.events.ProgressEvent;
 import flash.events.Event;
 import cpp.vm.Thread;
+import haxe.Timer;
 
 class Socket extends EventDispatcher implements IDataInput /*implements IDataOutput*/ {
     public var socketInput: Input;
@@ -31,6 +32,7 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
     private var _buffer: Array<Bytes>;
     private var _host: Host;
     private var _port: Int;
+    private var _timer: Timer;
 
     public var bytesAvailable(get,null) : Int;
     public var objectEncoding : Int;
@@ -60,25 +62,24 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
 	super();
 	_host = new Host(host);
 	_port = port;
-        _socket = new sys.net.Socket();
         _buffer = new Array<Bytes>();
-        socketInput = _socket.input;
-        socketOutput = _socket.output;
-	Thread.create(onThreadCreated);
+	_timer = new Timer(10);
+        _timer.run = onTick;
     }
 
-    private function onThreadCreated(): Void {
-	_socket.connect(_host, _port);
-        _connected = true;
-        onConnect();
-        _socket.setBlocking(false);
-        while(_connected) {
-            _socket.waitForRead();
-            _isFirstRead = true;
-            fillBuffer();
-            if(connected) {
-                onData();
-            }
+    private function onTick(): Void {
+        if(_socket == null) {
+            _socket = new sys.net.Socket();
+	    _socket.connect(_host, _port);
+            socketInput = _socket.input;
+            socketOutput = _socket.output;
+            _connected = true;
+            onConnect();
+            _socket.setBlocking(false);
+        }
+        fillBuffer();
+        if(bytesAvailable > 0) {
+            onData();
         }
     }
 
@@ -94,9 +95,9 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
         if(connected) {
             _connected = false;
             _socket.close();
-            //_socketHandler.onDisconnect(this);
+	    _timer.stop();
+            _timer = null;
             _socket = null;
-            //_socketHandler = null;
             socketInput = null;
         }
     }
@@ -118,6 +119,7 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
         var byteBuffer: BytesBuffer = new BytesBuffer();
         for(i in 0...num) {
             byteBuffer.add(_buffer.shift());
+	    bytesAvailable--;
         }
         return new BytesInput(byteBuffer.getBytes());
     }
@@ -130,8 +132,8 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
                 break;
             }
             _buffer.push(readByte);
+            bytesAvailable++;
         }
-        bytesAvailable = _buffer.length;
     }
 
     public function readBytes(bytes: flash.utils.ByteArray, offset: Int = 0, length: Int = 0): Void {
