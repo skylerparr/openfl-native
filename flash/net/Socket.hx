@@ -60,6 +60,12 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
 
     public function new(?host: String = null, ?port: Int = 0) {
 	super();
+	if(host != null) {
+            connect(host, port);
+	}
+    }
+
+    public function connect(host: String, port: Int = 0) {
 	_host = new Host(host);
 	_port = port;
         _buffer = new Array<Bytes>();

@@ -46,10 +46,9 @@ class XMLSocket extends EventDispatcher {
 	
 	
 	public function send(object:Dynamic):Void {
-		
 		_socket.writeUTFBytes(object);
-		//_socket.writeByte(0);
-		
+		_socket.writeByte(0);
+
 	}
 
 	// Event Handlers
@@ -61,7 +60,7 @@ class XMLSocket extends EventDispatcher {
 	
 	
 	private function onOpenHandler(_):Void {
-		
+		connected = true;
 		dispatchEvent(new Event(Event.CONNECT));
 		
 	}
