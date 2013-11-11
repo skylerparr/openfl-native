@@ -335,6 +335,9 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		
 	}
 	
+	public inline function writeMultiByte(value: String, charSet: String): Void {
+		  writeUTFBytes(value);
+   }
 	
 	public function readShort ():Int {
 		

@@ -61,6 +61,7 @@ class XMLSocket extends EventDispatcher {
 	
 	
 	private function onOpenHandler(_):Void {
+			  connected = true;
 		
 		dispatchEvent(new Event(Event.CONNECT));
 		

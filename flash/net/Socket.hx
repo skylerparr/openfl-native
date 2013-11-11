@@ -59,11 +59,21 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
     }
 
     public function new(?host: String = null, ?port: Int = 0) {
-	super();
-	_host = new Host(host);
-	_port = port;
+		  super();
+		  if(host != null && port > 0) {
+		      connect(host, port);
+		  }
+    }
+
+	 public function flush(): Void {
+		  socketOutput.flush();
+    }
+
+	 public function connect(host: String, port: Int): Void {
+		  _host = new Host(host);
+		  _port = port;
         _buffer = new Array<Bytes>();
-	_timer = new Timer(10);
+		  _timer = new Timer(10);
         _timer.run = onTick;
     }
 
@@ -137,7 +147,9 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
     }
 
     public function readBytes(bytes: flash.utils.ByteArray, offset: Int = 0, length: Int = 0): Void {
-
+		  for(i in offset...length) {
+					 bytes.writeByte(readByte());
+		  }
     }
 
     public function readBoolean():Bool {
