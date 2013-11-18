@@ -77,10 +77,6 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
         _timer.run = onTick;
     }
 
-    public function flush(): Void {
-	socketOutput.flush();
-    }
-
     private function onTick(): Void {
         if(_socket == null) {
             _socket = new sys.net.Socket();

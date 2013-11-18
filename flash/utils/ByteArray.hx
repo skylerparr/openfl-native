@@ -531,10 +531,6 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		writeByte (value ? 1 : 0);
 		
 	}
-        public function writeMultiByte(value: String, charSet:String):Void {
-  
-        }
-
         public function writeObject(object: Dynamic): Void {
  
         } 
