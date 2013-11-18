@@ -55,7 +55,7 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
     }
 
     private function get_bytesAvailable(): Int {
-        return bytesAvailable;
+        return _buffer.length;
     }
 
     public function new(?host: String = null, ?port: Int = 0) {
@@ -75,6 +75,10 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
         _buffer = new Array<Bytes>();
 		  _timer = new Timer(10);
         _timer.run = onTick;
+    }
+
+    public function flush(): Void {
+	socketOutput.flush();
     }
 
     private function onTick(): Void {
@@ -147,9 +151,10 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
     }
 
     public function readBytes(bytes: flash.utils.ByteArray, offset: Int = 0, length: Int = 0): Void {
-		  for(i in offset...length) {
-					 bytes.writeByte(readByte());
-		  }
+		  //for(i in offset...length) {
+		//			 bytes.writeByte(readByte());
+		 // }
+	bytes.writeBytes(readByteFromBuffer(length).readAll(length), offset, length);
     }
 
     public function readBoolean():Bool {
