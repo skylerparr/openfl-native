@@ -72,12 +72,11 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
 	 public function connect(host: String, port: Int): Void {
 		  _host = new Host(host);
 		  _port = port;
-        _buffer = new Array<Bytes>();
-		  _timer = new Timer(10);
-        _timer.run = onTick;
+        	  _buffer = new Array<Bytes>();
+                  Lib.current.addEventListener(Event.ENTER_FRAME, onTick);
     }
 
-    private function onTick(): Void {
+    private function onTick(e: Event): Void {
         if(_socket == null) {
             _socket = new sys.net.Socket();
 	    _socket.connect(_host, _port);
