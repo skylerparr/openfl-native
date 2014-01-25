@@ -32,6 +32,9 @@ class XMLSocket extends EventDispatcher {
 	
 	public function close():Void {
 		
+		_socket.removeEventListener(Event.CONNECT, onOpenHandler);
+		_socket.removeEventListener(ProgressEvent.SOCKET_DATA, onMessageHandler);
+		
 		_socket.close();
 		
 	}

@@ -32,7 +32,6 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
     private var _buffer: Array<Bytes>;
     private var _host: Host;
     private var _port: Int;
-    private var _timer: Timer;
 
     public var bytesAvailable(get,null) : Int;
     public var objectEncoding : Int;
@@ -104,8 +103,6 @@ class Socket extends EventDispatcher implements IDataInput /*implements IDataOut
         if(connected) {
             _connected = false;
             _socket.close();
-	    _timer.stop();
-            _timer = null;
             _socket = null;
             socketInput = null;
         }
