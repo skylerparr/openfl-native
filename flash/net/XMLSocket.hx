@@ -41,7 +41,8 @@ class XMLSocket extends EventDispatcher {
 	
 	
 	public function connect(host: String, port:Int):Void {
-		_socket = new Socket(host, port);
+		_socket = new Socket();
+		_socket.connect(host, port);
 		_socket.addEventListener(Event.CONNECT, onOpenHandler);
 		_socket.addEventListener(ProgressEvent.SOCKET_DATA, onMessageHandler);
 		

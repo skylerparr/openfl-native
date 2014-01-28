@@ -2,7 +2,9 @@
 -cp ::BUILD_DIR::/emscripten/haxe
 -cpp ::CPP_DIR::
 --macro allowPackage("flash")
+--macro keep("::APP_MAIN::")
 -lib openfl-native
 -D emscripten
 -D webgl
 -debug
+-D no-compilation

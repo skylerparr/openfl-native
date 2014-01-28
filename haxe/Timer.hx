@@ -90,73 +90,150 @@ class Timer {
 	}
 
 }
+
+
 #else
-
-
-
-
-// Custom haxe.Timer implementation for C++ and Neko
-
-typedef TimerList = Array <Timer>;
 
 
 class Timer {
 	
 	
-	static var sRunningTimers:TimerList = [];
+	private static var sRunningTimers:Array <Timer> = [];
 	
-	var mTime:Float;
-	var mFireAt:Float;
-	var mRunning:Bool;
+	private var mTime:Float;
+	private var mFireAt:Float;
+	private var mRunning:Bool;
 	
 	
 	public function new (time:Float) {
 		
 		mTime = time;
 		sRunningTimers.push (this);
-		mFireAt = GetMS () + mTime;
+		mFireAt = getMS () + mTime;
 		mRunning = true;
 		
 	}
 	
 	
-	public static function measure<T>( f : Void -> T, ?pos : PosInfos ) : T {
-		var t0 = stamp();
-		var r = f();
-		Log.trace((stamp() - t0) + "s", pos);
-		return r;
+	public static function delay (f:Void -> Void, time:Int) {
+		
+		var t = new Timer (time);
+		
+		t.run = function () {
+			
+			t.stop ();
+			f ();
+			
+		};
+		
+		return t;
+		
 	}
 	
 	
-	// Set this with "run=..."
+	private static function getMS ():Float {
+		
+		return stamp () * 1000.0;
+		
+	}
+	
+	
+	public static function measure<T> (f:Void -> T, ?pos:PosInfos):T {
+		
+		var t0 = stamp ();
+		var r = f ();
+		Log.trace ((stamp () - t0) + "s", pos);
+		return r;
+		
+	}
+	
+	
 	dynamic public function run () {
 		
 		
 		
 	}
-   
+	
+	
+	public static function stamp ():Float {
+		
+		return lime_time_stamp ();
+		
+	}
+	
 	
 	public function stop ():Void {
 		
 		if (mRunning) {
 			
 			mRunning = false;
-			sRunningTimers.remove (this);
+			
+			for (i in 0...sRunningTimers.length) {
+				
+				if (sRunningTimers[i] == this) {
+					
+					sRunningTimers[i] = null;
+					break;
+					
+				}
+				
+			}
 			
 		}
 		
 	}
 	
 	
-	/**
-	 * @private
-	 */
-	@:noCompletion static public function __nextWake (limit:Float):Float {
+	@:noCompletion private function __check (inTime:Float) {
 		
-		var now = nme_time_stamp () * 1000.0;
+		if (inTime >= mFireAt) {
+			
+			mFireAt += mTime;
+			run ();
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion public static function __checkTimers () {
+		
+		var now = getMS ();
+		var foundNull = false;
+		var timer;
+		
+		for (i in 0...sRunningTimers.length) {
+			
+			timer = sRunningTimers[i];
+			
+			if (timer != null) {
+				
+				timer.__check (now);
+				
+			}
+			
+			foundNull = (foundNull || sRunningTimers[i] == null);
+			
+		}
+		
+		if (foundNull) {
+			
+			sRunningTimers = sRunningTimers.filter (function (val) { return val != null; });
+			
+		}
+		
+	}
+	
+	
+	@:noCompletion public static function __nextWake (limit:Float):Float {
+		
+		var now = lime_time_stamp () * 1000.0;
 		var sleep;
 		
 		for (timer in sRunningTimers) {
+			
+			if (timer == null)
+				continue;
 			
 			sleep = timer.mFireAt - now;
 			
@@ -178,66 +255,18 @@ class Timer {
 		
 	}
 	
-
-	@:noCompletion function __check (inTime:Float) {
-		
-		if (inTime >= mFireAt) {
-			
-			mFireAt += mTime;
-			run ();
-			
-		}
-		
-	}
-	
-
-	/**
-	 * @private
-	 */
-	@:noCompletion public static function __checkTimers () {
-		
-		var now = GetMS ();
-		
-		for (timer in sRunningTimers) {
-			
-			timer.__check (now);
-			
-		}
-		
-	}
 	
 	
-	static function GetMS ():Float {
-		
-		return stamp () * 1000.0;
-		
-	}
 	
-
-   // From std/haxe/Timer.hx
-	public static function delay (f:Void -> Void, time:Int) {
-		
-		var t = new Timer (time);
-		
-		t.run = function () {
-			t.stop ();
-			f ();
-		};
-		
-		return t;
-		
-	}
+	// Native Methods
 	
 	
-	static public function stamp ():Float {
-		
-		return nme_time_stamp ();
-		
-	}
 	
-
-	static var nme_time_stamp = flash.Lib.load ("nme", "nme_time_stamp", 0);
+	
+	static var lime_time_stamp = flash.Lib.load ("lime", "lime_time_stamp", 0);
 	
 	
 }
+
+
 #end

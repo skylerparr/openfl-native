@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension>
 	
-	<section unless="display">
-		
-		<ndll name="std" haxelib="hxcpp" />
-		<ndll name="regexp" haxelib="hxcpp" />
-		<ndll name="zlib" haxelib="hxcpp" />
-		
-		<ndll name="nme" />
-		
-		<ndll name="libfreetype" register="false" if="emscripten" />
-		
-	</section>
+	<echo value="Warning: Including &quot;openfl-native&quot; on a target platform that is not native" unless="native" />
+	
+	<set name="openfl" />
+	<include haxelib="lime" />
 	
 	<templatePath name="templates" />
 	

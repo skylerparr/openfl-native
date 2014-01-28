@@ -20,7 +20,7 @@ import cpp.zip.Flush;
 
 
 @:autoBuild(openfl.Assets.embedFile())
-class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput implements IMemoryRange {
+class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput implements IMemoryRange implements IDataOutput {
 	
 
 	public var bigEndian:Bool;
@@ -110,7 +110,7 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		
 		if (algorithm == CompressionAlgorithm.LZMA) {
 			
-			result = Bytes.ofData (nme_lzma_encode (src.getData ()));
+			result = Bytes.ofData (lime_lzma_encode (src.getData ()));
 			
 		} else {
 			
@@ -195,6 +195,13 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 	public function getLength ():Int {
 		
 		return length;
+		
+	}
+	
+	
+	public function getNativePointer ():Dynamic {
+		
+		return lime_byte_array_get_native_pointer (this);
 		
 	}
 	
@@ -286,11 +293,11 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 	}
 	
 	
-	#if !no_nme_io
+	#if !no_lime_io
 	
 	static public function readFile (path:String):ByteArray {
 		
-		return nme_byte_array_read_file (path);
+		return lime_byte_array_read_file (path);
 		
 	}
 	
@@ -400,7 +407,11 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		position += length;
 		
 		#if neko
-		return new String (untyped __dollar__ssub (b, p, length));
+		var result = new String (untyped __dollar__ssub (b, p, length));
+		if (length > 0 && result.charCodeAt (length - 1) == 0) {
+			return result.substr (0, length - 1);
+		}
+		return result;
 		#elseif cpp
 		var result = "";
 		untyped __global__.__hxcpp_string_of_bytes (b, result, p, length);
@@ -485,7 +496,7 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		
 		if (algorithm == CompressionAlgorithm.LZMA) {
 			
-			result = Bytes.ofData (nme_lzma_decode (src.getData ()));
+			result = Bytes.ofData (lime_lzma_decode (src.getData ()));
 			
 		} else {
 			
@@ -549,7 +560,7 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 	}
 	
 	
-	public function writeBytes(bytes:Bytes, offset:Int = 0, length:Int = 0):Void {
+	public function writeBytes (bytes:Bytes, offset:Int = 0, length:Int = 0):Void {
 		
 		if (length == 0) length = bytes.length - offset;
 		ensureElem (position + length - 1, true);
@@ -568,16 +579,16 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		var bytes = Bytes.ofData (_double_bytes (x, bigEndian));
 		#end
 		
-		writeBytes (bytes);
+		writeBytes (bytes, 0, 0);
 		
 	}
 	
 	
-	#if !no_nme_io
+	#if !no_lime_io
 	
 	public function writeFile (path:String):Void {
 		
-		nme_byte_array_overwrite_file(path, this);
+		lime_byte_array_overwrite_file(path, this);
 		
 	}
 	
@@ -592,7 +603,7 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		var bytes = Bytes.ofData (_float_bytes (x, bigEndian));
 		#end
 		
-		writeBytes (bytes);
+		writeBytes (bytes, 0, 0);
 		
 	}
 	
@@ -655,7 +666,7 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		#end
 		
 		writeShort (bytes.length);
-		writeBytes (bytes);
+		writeBytes (bytes, 0, 0);
 		
 	}
 	
@@ -668,7 +679,7 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		var bytes = Bytes.ofString (s);
 		#end
 		
-		writeBytes (bytes);
+		writeBytes (bytes, 0, 0);
 		
 	}
 	
@@ -696,7 +707,7 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 	}
 	
 	
-	#if !no_nme_io
+	#if !no_lime_io
 	
 	@:noCompletion private static function __init__ ():Void {
 		
@@ -716,7 +727,7 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 		var bytes = function (bytes:ByteArray) { return bytes == null ? null : bytes.b; }
 		var slen = function(bytes:ByteArray) { return bytes == null ? 0 : bytes.length; }
 		
-		var init = Lib.load ("nme", "nme_byte_array_init", 4);
+		var init = Lib.load ("lime", "lime_byte_array_init", 4);
 		init (factory, slen, resize, bytes);
 		
 	}
@@ -767,12 +778,13 @@ class ByteArray extends Bytes implements ArrayAccess<Int> implements IDataInput 
 	private static var _double_of_bytes = Lib.load ("std", "double_of_bytes", 2);
 	private static var _float_bytes = Lib.load ("std", "float_bytes", 2);
 	private static var _float_of_bytes = Lib.load ("std", "float_of_bytes", 2);
-	#if !no_nme_io
-	private static var nme_byte_array_overwrite_file = Lib.load ("nme", "nme_byte_array_overwrite_file", 2);
-	private static var nme_byte_array_read_file = Lib.load ("nme", "nme_byte_array_read_file", 1);
+	#if !no_lime_io
+	private static var lime_byte_array_overwrite_file = Lib.load ("lime", "lime_byte_array_overwrite_file", 2);
+	private static var lime_byte_array_read_file = Lib.load ("lime", "lime_byte_array_read_file", 1);
 	#end
-	private static var nme_lzma_encode = Lib.load ("nme", "nme_lzma_encode", 1);
-	private static var nme_lzma_decode = Lib.load ("nme", "nme_lzma_decode", 1);
+	private static var lime_byte_array_get_native_pointer = Lib.load ("lime", "lime_byte_array_get_native_pointer", 1);
+	private static var lime_lzma_encode = Lib.load ("lime", "lime_lzma_encode", 1);
+	private static var lime_lzma_decode = Lib.load ("lime", "lime_lzma_decode", 1);
 	
 	
 }
