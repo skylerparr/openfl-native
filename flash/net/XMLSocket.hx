@@ -12,11 +12,17 @@ import flash.net.Socket;
 class XMLSocket extends EventDispatcher {
 
 
-	public var connected(default, null):Bool;
+	public var connected(get, null):Bool;
 	public var timeout:Int;
 
 	private var _socket:Socket;
 
+	private function get_connected(): Bool {
+	     if(_socket == null) {
+		return false;
+	     }
+             return _socket.connected;
+	}
 
 	public function new(host:String = null, port:Int = 80):Void {
 
